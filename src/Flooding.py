@@ -1,22 +1,38 @@
+import asyncio
+import sys
+
+# Solución para problemas con aiodns en Windows
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from ConnectionXMPP import ClienteXMPP
-import json
 
 class DifusionAlgoritmo:
-    def __init__(self, nodo_id, vecinos):
+    def __init__(self, nodo_id, password):
         """
-        Inicializa el nodo con su ID y los vecinos con los que puede comunicarse.
+        Inicializa el nodo con su JID y contraseña.
         """
         self.nodo_id = nodo_id
-        self.red_vecinos = vecinos
+        self.red_vecinos = set()  # Usaremos un set para almacenar dinámicamente los vecinos
         self.mensajes_recibidos = set()
-        self.cliente_xmpp = ClienteXMPP(nodo_id, "password", self)
+        self.cliente_xmpp = ClienteXMPP(nodo_id, password, self)
 
     def conectar(self):
         """
         Inicia la conexión XMPP.
         """
+        print("Intentando conectar al servidor XMPP...")
         self.cliente_xmpp.connect()
+        print("Conexión iniciada, procesando...")
         self.cliente_xmpp.process(forever=False)
+        print("Conexión procesada.")
+
+    def agregar_vecino(self, vecino_jid):
+        """
+        Agrega un vecino a la lista de vecinos del nodo.
+        """
+        self.red_vecinos.add(vecino_jid)
+        print(f"Vecino agregado: {vecino_jid}")
 
     def propagar_mensaje(self, origen, mensaje_id, contenido):
         """
@@ -69,3 +85,12 @@ class DifusionAlgoritmo:
         tiempo_recepcion = 0  # Esto debería ser calculado en base a timestamps reales
         print(f"Echo response recibido. Tiempo de respuesta: {tiempo_recepcion}ms")
 
+# Ejemplo de cómo configurar un nodo específico
+if __name__ == "__main__":
+    # JID (Jabber ID) y contraseña del nodo
+    nodo_id = "ore21970-te@alumchat.lol"
+    password = "pruebas"
+
+    # Crear instancia del algoritmo y conectar
+    difusion = DifusionAlgoritmo(nodo_id, password)
+    difusion.conectar()

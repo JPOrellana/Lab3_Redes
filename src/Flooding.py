@@ -1,3 +1,4 @@
+from ConnectionXMPP import ClienteXMPP
 import json
 
 class DifusionAlgoritmo:
@@ -8,7 +9,15 @@ class DifusionAlgoritmo:
         self.nodo_id = nodo_id
         self.red_vecinos = vecinos
         self.mensajes_recibidos = set()
-    
+        self.cliente_xmpp = ClienteXMPP(nodo_id, "password", self)
+
+    def conectar(self):
+        """
+        Inicia la conexión XMPP.
+        """
+        self.cliente_xmpp.connect()
+        self.cliente_xmpp.process(forever=False)
+
     def propagar_mensaje(self, origen, mensaje_id, contenido):
         """
         Envía el mensaje a todos los vecinos del nodo actual, excepto al origen.
@@ -20,7 +29,7 @@ class DifusionAlgoritmo:
     def enviar_a_vecino(self, vecino, mensaje_id, contenido):
         """
         Lógica para enviar un mensaje a un vecino específico.
-        Aquí se conectaría a la capa XMPP utilizando el formato JSON especificado.
+        Se envía el mensaje utilizando el cliente XMPP.
         """
         mensaje = {
             "type": "send_routing",
@@ -29,9 +38,7 @@ class DifusionAlgoritmo:
             "data": contenido,
             "hops": len(self.red_vecinos)
         }
-        mensaje_json = json.dumps(mensaje)
-        print(f"Enviando mensaje a {vecino}: {mensaje_json}")
-        # Aquí iría la integración con la capa XMPP para enviar el mensaje
+        self.cliente_xmpp.enviar_mensaje(vecino, mensaje)
 
     def recibir_mensaje(self, origen, mensaje_id, contenido):
         """
@@ -52,9 +59,7 @@ class DifusionAlgoritmo:
             "type": "echo",
             "from": self.nodo_id,
         }
-        mensaje_json = json.dumps(mensaje)
-        print(f"Enviando echo a {vecino}: {mensaje_json}")
-        # Aquí iría la integración con la capa XMPP para enviar el echo
+        self.cliente_xmpp.enviar_mensaje(vecino, mensaje)
     
     def recibir_echo_response(self, mensaje):
         """
@@ -63,3 +68,4 @@ class DifusionAlgoritmo:
         # Lógica para calcular el tiempo de recepción y envío
         tiempo_recepcion = 0  # Esto debería ser calculado en base a timestamps reales
         print(f"Echo response recibido. Tiempo de respuesta: {tiempo_recepcion}ms")
+
